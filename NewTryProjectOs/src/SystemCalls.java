@@ -6,14 +6,14 @@ public class SystemCalls {
     public static PCB createPCB(int id, int burstTime, int requiredMemory) {
         PCB pcb = new PCB(id, burstTime, requiredMemory);
         pcb.changeState("NEW");
-       //1 System.out.println("Created PCB for Job " + id + " with Burst Time = " + burstTime + " ms and Memory = " + requiredMemory + " MB.");
+        System.out.println("Created PCB for Job " + id + " with Burst Time = " + burstTime + " ms and Memory = " + requiredMemory + " MB.");
         return pcb;
     }
 
     // System Call to update job times after execution
     public static void updateJobTimes(PCB job, int currentTime) {
         job.setTurnaroundTime(currentTime);
-      //  System.out.println("Job " + job.id + " Turnaround Time: " + job.turnaroundTime + " ms.");
+        System.out.println("Job " + job.id + " Turnaround Time: " + job.turnaroundTime + " ms.");
     }
 
     // System Call to print PCB details
@@ -22,7 +22,7 @@ public class SystemCalls {
         System.out.println("State: " + job.state);
         System.out.println("Burst Time: " + job.burstTime + " ms");
         System.out.println("Memory Required: " + job.memoryRequired + " MB");
-       // System.out.println("Turnaround Time: " + job.turnaroundTime + " ms");
+        System.out.println("Turnaround Time: " + job.turnaroundTime + " ms");
     }
 
     // System Call to print the ready queue
