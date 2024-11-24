@@ -27,7 +27,7 @@ public class FileReaderThread extends Thread {
 
                 // Check if the line contains exactly one colon, one semicolon, and splits into 3 parts
                 if (!line.contains(":") || !line.contains(";") || line.indexOf(":") >= line.indexOf(";") || parts.length != 3) {
-                    System.out.println("Invalid format, skipping line: " + line);
+                   // System.out.println("Invalid format, skipping line: " + line);
                     continue;  // Skip this line if the format is invalid
                 }
 
@@ -38,7 +38,7 @@ public class FileReaderThread extends Thread {
 
                     // Check memory constrain (should not exceed 1024 MB)
                     if (memoryRequired > 1024) {
-                        System.out.println("Job " + id + " is skipped due to memory limitation.");
+                        //System.out.println("Job " + id + " is skipped due to memory limitation.");
                         continue;  // Skip jobs that exceed memory limit
                     }
 
@@ -48,10 +48,10 @@ public class FileReaderThread extends Thread {
                         jobQueue.add(job);
                         priorityQueue.add(job);
 
-                    System.out.println("Job " + id + " added to JobQueue: Burst Time = " + burstTime + " ms, Memory = " + memoryRequired + " MB.");
+                 //   System.out.println("Job " + id + " added to JobQueue: Burst Time = " + burstTime + " ms, Memory = " + memoryRequired + " MB.");
                 } catch (NumberFormatException e) {
                     // Catch invalid number format.
-                    System.out.println("Invalid number format, skipping: " + line);
+                    //System.out.println("Invalid number format, skipping: " + line);
                 }
             }
         } catch (IOException e) {
@@ -64,7 +64,7 @@ public class FileReaderThread extends Thread {
     public static PCB createPCB(int id, int burstTime, int requiredMemory) {
         PCB pcb = new PCB(id, burstTime, requiredMemory);
         pcb.changeState("NEW");
-        System.out.println("Created PCB for Job " + id + " with Burst Time = " + burstTime + " ms and Memory = " + requiredMemory + " MB.");
+        
         return pcb;
     }
     
