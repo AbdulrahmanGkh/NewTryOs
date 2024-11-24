@@ -4,15 +4,11 @@ import java.io.IOException;
 import java.util.Queue;
 
 public class FileReaderThread extends Thread {
-    private Queue<PCB> jobQueueFCFS;
-    private Queue<PCB> jobQueueSJF;
-    private Queue<PCB> jobQueueRR;
+    private Queue<PCB> jobQueue;
     private String filePath;
 
-    public FileReaderThread(Queue<PCB> jobQueueFCFS, Queue<PCB> jobQueueSJF, Queue<PCB> jobQueueRR, String filePath) {
-        this.jobQueueFCFS = jobQueueFCFS;
-        this.jobQueueSJF = jobQueueSJF;
-        this.jobQueueRR = jobQueueRR;
+    public FileReaderThread(Queue<PCB> jobQueue, String filePath) {
+        this.jobQueue = jobQueue;
         this.filePath = filePath;
     }
 
@@ -23,30 +19,29 @@ public class FileReaderThread extends Thread {
             while ((line = br.readLine()) != null) {
                 String[] parts = line.split(":|;");
                 if (parts.length != 3) {
-                    System.out.println("Invalid line format, skipping: " + line);
+                    System.out.println("Invalid format, skipping line: " + line);
                     continue;
                 }
 
-                int id = Integer.parseInt(parts[0].trim());
-                int burstTime = Integer.parseInt(parts[1].trim());
-                int memoryRequired = Integer.parseInt(parts[2].trim());
+                try {
+                    int id = Integer.parseInt(parts[0].trim());
+                    int burstTime = Integer.parseInt(parts[1].trim());
+                    int memoryRequired = Integer.parseInt(parts[2].trim());
 
-                if (memoryRequired > 1024) { 
-                    System.out.println("Job " + id + " isn't supported due to memory limit.");
-                    continue;
-                }
+                    if (memoryRequired > 1024) {
+                        System.out.println("Job " + id + " skipped due to memory limitation.");
+                        continue;
+                    }
 
-                PCB job = SystemCalls.createPCB(id, burstTime, memoryRequired);
+                    PCB job = SystemCalls.createPCB(id, burstTime, memoryRequired);
+                    synchronized (jobQueue) {
+                        jobQueue.add(job);
+                        jobQueue.notifyAll();
+                    }
 
-                // Add the same job to all three queues
-                synchronized (jobQueueFCFS) {
-                    jobQueueFCFS.add(new PCB(job.id, job.burstTime, job.memoryRequired));
-                }
-                synchronized (jobQueueSJF) {
-                    jobQueueSJF.add(new PCB(job.id, job.burstTime, job.memoryRequired));
-                }
-                synchronized (jobQueueRR) {
-                    jobQueueRR.add(new PCB(job.id, job.burstTime, job.memoryRequired));
+                    System.out.println("Job " + id + " added to JobQueue: Burst Time = " + burstTime + " ms, Memory = " + memoryRequired + " MB.");
+                } catch (NumberFormatException e) {
+                    System.out.println("Invalid number format, skipping: " + line);
                 }
             }
         } catch (IOException e) {
