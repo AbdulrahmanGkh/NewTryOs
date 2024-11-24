@@ -1,0 +1,24 @@
+public class Flag {
+	
+	//This class represent key objects to ensure we control the flow of the threads.
+	
+    private boolean turn;
+
+    public Flag(boolean turn) {
+        this.turn = turn;
+    }
+
+    public boolean isMyTurn() {
+        return turn;
+    }
+
+    public void setTurnToFalse() { // LOCK
+       turn =false;
+    }
+    
+    public void setTurnToTrue() { // UNLOCK
+        turn =true;
+     }
+    
+   
+}
