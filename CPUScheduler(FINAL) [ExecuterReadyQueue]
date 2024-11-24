@@ -1,0 +1,185 @@
+import java.util.PriorityQueue;
+import java.util.Queue;
+
+public class CPUScheduler {
+    private Queue<PCB> jobQueue;
+    private Queue<PCB> readyQueue;
+    private PriorityQueue<PCB> priorityQueue;
+    private MemoryManagment memory;
+    private Flag turn;
+
+    public CPUScheduler(Queue<PCB> jobQueue,PriorityQueue<PCB> priorityQueue, Queue<PCB> readyQueue,MemoryManagment memory ,Flag turn) {
+    	
+        this.jobQueue = jobQueue;
+        this.priorityQueue = priorityQueue;
+        this.readyQueue = readyQueue;
+        this.memory = memory;
+        this.turn = turn;
+    }
+
+    public void fcfsSchedule() {
+        int currentTime = 0;
+        int totalWaitingTime = 0;
+        int totalTurnaroundTime = 0;
+        int processCounter = 0;
+        int endTime = 0 , startTime = 0;
+        while(!jobQueue.isEmpty() || !readyQueue.isEmpty()) {
+            synchronized (readyQueue) {
+    	        while (turn.isMyTurn() && !readyQueue.isEmpty()) {
+    	            PCB process = readyQueue.poll(); 
+    	            process.changeState("RUNNING");
+
+                startTime = currentTime;
+                try {
+                    Thread.sleep(process.burstTime);
+                } catch (InterruptedException e) {
+                    System.out.println("Process " + process.id + " execution interrupted.");
+                }
+
+               
+                int usedMemory = process.memoryRequired;
+                endTime = startTime + process.burstTime;
+                totalWaitingTime += 0 + startTime; 
+                totalTurnaroundTime += endTime - 0; 
+                
+                
+                process.setWaitingTime(0 + startTime);
+                process.setTurnaroundTime(endTime - 0);
+                process.changeState("TERMINATED");
+                memory.releaseMemory(process.memoryRequired);
+                processCounter++;
+
+                System.out.println("Process " + process.id + " executed. Start Time: " + startTime + 
+                        ", End Time: " + endTime + ", Used Memory: " + usedMemory + 
+                        " MB, Available Memory: " + memory.getAvailableMemory() + " MB");
+               
+              
+                currentTime += process.burstTime;
+                readyQueue.notifyAll();
+            }
+        }
+    }
+     
+        System.out.println("FCFS Scheduling completed.");
+        System.out.println("Total processes executed: " + processCounter);
+        System.out.printf("Average Waiting Time: %.2f ms, Average Turnaround Time: %.2f ms\n",
+                (double) totalWaitingTime / processCounter, (double) totalTurnaroundTime / processCounter);
+    }
+    
+
+    public void sjfSchedule() {
+
+    	int currentTime = 0;
+        int totalWaitingTime = 0;
+        int totalTurnaroundTime = 0;
+        int processCounter = 0;
+        int endTime = 0 , startTime = 0;
+        while(!priorityQueue.isEmpty() || !readyQueue.isEmpty()) {
+            synchronized (readyQueue) {
+    	        while (turn.isMyTurn() && !readyQueue.isEmpty()) {
+    	            PCB process = readyQueue.poll();
+    	            process.changeState("RUNNING");
+
+                startTime = currentTime; 
+               
+                try {
+                    Thread.sleep(process.burstTime);
+                } catch (InterruptedException e) {
+                    System.out.println("Process " + process.id + " execution interrupted.");
+                }
+
+                int usedMemory = process.memoryRequired;
+                endTime = startTime + process.burstTime;
+                totalWaitingTime += 0 + startTime; // ArrivalTime + startTime
+                totalTurnaroundTime += endTime - 0; // EndTime - ArrivalTime
+                
+                process.setWaitingTime(0 + startTime);
+                process.setTurnaroundTime(endTime - 0);
+                process.changeState("TERMINATED");
+                memory.releaseMemory(process.memoryRequired);
+                processCounter++;
+
+                System.out.println("Process " + process.id + " executed. Start Time: " + startTime + 
+                        ", End Time: " + endTime + ", Used Memory: " + usedMemory + 
+                        " MB, Available Memory: " + memory.getAvailableMemory() + " MB");
+               
+              
+                currentTime += process.burstTime;
+                readyQueue.notifyAll();
+            }
+        }
+    }
+    
+        System.out.println("SJF Scheduling completed.");
+        System.out.println("Total processes executed: " + processCounter);
+        System.out.printf("Average Waiting Time: %.2f ms, Average Turnaround Time: %.2f ms\n",
+                (double) totalWaitingTime / processCounter, (double) totalTurnaroundTime / processCounter);
+       
+    }
+
+
+    
+    public void rrSchedule() {
+    	
+    	  int currentTime = 0;
+    	  int processCounter = 0;
+    	  int totalWaitingTime = 0;       // helper for calculating AVG
+    	  int totalTurnaroundTime = 0;    // helper for calculating AVG
+    	  int endtime = 0;
+    	    
+        while(!jobQueue.isEmpty() || !readyQueue.isEmpty()) {
+        synchronized (readyQueue) {
+	        while (turn.isMyTurn() && !readyQueue.isEmpty()) {
+	            PCB process = readyQueue.poll(); 
+	            process.changeState("RUNNING");
+	            
+	            int startTime = currentTime; 
+	            int executedTime = Math.min(process.remainingTime, 8); 
+	            currentTime += executedTime; 
+	            process.remainingTime -= executedTime; 
+	            int waitingTime = startTime - 0;
+	            totalWaitingTime += waitingTime;
+	            
+	            try {
+	                Thread.sleep(executedTime);
+	            } catch (InterruptedException e) {
+	                System.out.println("Process " + process.id + " execution interrupted.");
+	            }
+	
+	            if (process.remainingTime > 0) {
+	            	 System.out.println("Process Executed partially: " + process.id + ", total burst time: " + process.burstTime + 
+	            			 "ms, Remaining time: " + process.remainingTime
+		                        +" ms, Available Memory: " + memory.getAvailableMemory() + " MB");
+	                readyQueue.add(process);
+	            } else {
+	            	
+	            	 int turnaroundTime = currentTime - 0;
+	                 totalTurnaroundTime += turnaroundTime;
+	              
+	                process.changeState("TERMINATED");
+	                memory.releaseMemory(process.memoryRequired); 
+	                processCounter++;
+	                endtime = currentTime;
+	                System.out.println("Process " + process.id + " executed. Start Time: " + startTime + 
+	                        ", End Time: " + endtime + ", Used Memory: " + (1024-memory.getAvailableMemory()) + 
+	                        " MB, Available Memory: " + memory.getAvailableMemory() + " MB");
+	                readyQueue.notifyAll();
+	            }
+	        }
+        }
+    } 
+        
+        
+        if (processCounter > 0) { //Avoiding Division by zero
+            double averageWaitingTime = (double) totalWaitingTime / processCounter;
+            double averageTurnaroundTime = (double) totalTurnaroundTime / processCounter;
+            System.out.println("RR Scheduling completed.");
+            System.out.println("Total processes executed: " + processCounter);
+            System.out.printf("Average Waiting Time: %.2f ms\n", averageWaitingTime);
+            System.out.printf("Average Turnaround Time: %.2f ms\n", averageTurnaroundTime);
+        } else {
+            System.out.println("No processes executed.");
+        }
+    }
+
+}
