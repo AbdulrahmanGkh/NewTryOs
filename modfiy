@@ -1,14 +1,63 @@
- private static void printPriorityQueue(PriorityQueue<PCB> queue) {
-        System.out.println("--- Priority Queue Content ---");
-        for (PCB pcb : queue) {
-            System.out.println("Job ID: " + pcb.getId() + ", Burst Time: " + pcb.getBurstTime() + ", Memory Required: " + pcb.getMemoryRequired() + " MB");
+   public void rrSchedule() {
+        int currentTime = 0;
+        int processCounter = 0;
+        int endtime = 0;
+        int totalWaitingTime = 0; // Sum of all waiting times
+        int totalTurnaroundTime = 0; // Sum of all turnaround times
+        while(!jobQueue.isEmpty() || (jobQueue.isEmpty() && !readyQueue.isEmpty())) {
+        synchronized (readyQueue) {
+	        while (turn.isMyTurn() && (!readyQueue.isEmpty() || (jobQueue.isEmpty() && !readyQueue.isEmpty()))) {
+	            PCB process = readyQueue.poll(); // استخراج العملية الحالية
+	            process.changeState("RUNNING");
+	
+	            int startTime = currentTime; // وقت بداية التنفيذ
+	            int executedTime = Math.min(process.remainingTime, 8); // مقدار الوقت المنفذ
+	            currentTime += executedTime; // تحديث الوقت الحالي
+	            process.remainingTime -= executedTime; 
+	            
+	            try {
+	                Thread.sleep(executedTime);
+	            } catch (InterruptedException e) {
+	                System.out.println("Process " + process.id + " execution interrupted.");
+	            }
+	
+	            if (process.remainingTime > 0) {
+	            	 System.out.println("Process Executed partially: " + process.id + ", total burst time: " + process.burstTime + 
+	            			 "ms, Remaining time: " + process.remainingTime
+		                        +" ms, Available Memory: " + memory.getAvailableMemory() + " MB");
+	                readyQueue.add(process);
+	            } else {
+	                // العملية انتهت
+	              
+	            	process.changeState("TERMINATED");
+	                memory.releaseMemory(process.memoryRequired); // تحرير الذاكرة بعد التنفيذ
+	                processCounter++;
+	                endtime = currentTime;
+	                int turnaroundTime = endtime; // Turnaround time = completion time
+                    int waitingTime = turnaroundTime - process.burstTime;
+                   // process.setWaitingTime(waitingTime);
+                    //process.setTurnaroundTime(turnaroundTime);
+                    totalWaitingTime += waitingTime;
+                    totalTurnaroundTime += turnaroundTime;
+	                System.out.println("Process " + process.id + " executed. Start Time: " + startTime + 
+	                        ", End Time: " + endtime + ", Used Memory: " + (1024-memory.getAvailableMemory()) + 
+	                        " MB, Available Memory: " + memory.getAvailableMemory() + " MB" );
+	                readyQueue.notifyAll();
+	            }
+	        }
         }
-    }
+            // إخطار الخيوط الأخرى
+          
+        }
 
-    // Method to print JobQueue content
-    private static void printJobQueue(Queue<PCB> queue) {
-        System.out.println("--- Job Queue Content ---");
-        for (PCB pcb : queue) {
-            System.out.println("Job ID: " + pcb.getId() + ", Burst Time: " + pcb.getBurstTime() + ", Memory Required: " + pcb.getMemoryRequired() + " MB");
-        }
+        // إنهاء الجدولة
+        double averageWaitingTime = (double) totalWaitingTime / processCounter;
+        double averageTurnaroundTime = (double) totalTurnaroundTime / processCounter;
+
+        System.out.println("RR Scheduling completed.");
+        System.out.println("Total processes executed: " + processCounter);
+        System.out.printf("Average Waiting Time: %.2f ms\n", averageWaitingTime);
+        System.out.printf("Average Turnaround Time: %.2f ms\n", averageTurnaroundTime);
+    
+        
     }
