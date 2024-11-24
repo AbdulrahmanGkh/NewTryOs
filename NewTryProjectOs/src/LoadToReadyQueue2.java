@@ -96,6 +96,7 @@ public class LoadToReadyQueue extends Thread {
                     memory.allocateMemory(job.memoryRequired);
                     job.changeState("READY");
                     System.out.println("Job " + job.id + " loaded for Round Robin. Remaining Memory: " + memory.getAvailableMemory() + " MB.");
+                    turn.setTurnToTrue();
                 } else {
                     try {
                         System.out.println("Not enough memory for Job " + job.id + ". Waiting...");
