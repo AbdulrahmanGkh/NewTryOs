@@ -1,0 +1,3 @@
+public int compareTo(PCB other) {
+        return Integer.compare(this.burstTime, other.burstTime); // Compare by burst time
+    }
