@@ -41,11 +41,11 @@ public class Main {
 
             
             // Call Loader Thread jobQueue ----> ReadyQueue
-            LoadToReadyQueue loader = new LoadToReadyQueue(jobQueue,priorityQueue, readyQueue, memory, choice,turn);
+            LoaderThread loader = new LoaderThread(jobQueue,priorityQueue, readyQueue, memory, choice,turn);
             loader.start();
 
             // This is the main thread real work. 
-            ExecuteReadyQueue scheduler = new ExecuteReadyQueue(jobQueue,priorityQueue, readyQueue, memory , turn);
+            CPUScheduler scheduler = new CPUScheduler(jobQueue,priorityQueue, readyQueue, memory , turn);
 
             switch (choice) {
                 case 1:
