@@ -1,55 +1,38 @@
-import java.util.LinkedList;
-import java.util.Queue;
-import java.util.Scanner;
+import java.util.*;
 
 public class Main {
-    public static Queue<PCB> jobQueueFCFS = new LinkedList<>();
-    public static Queue<PCB> jobQueueSJF = new LinkedList<>();
-    public static Queue<PCB> jobQueueRR = new LinkedList<>();
+    public static Queue<PCB> jobQueue = new LinkedList<>();
     public static Queue<PCB> readyQueue = new LinkedList<>();
-    public static MemoryManagment memory = new MemoryManagment(1024);
+    static MemoryManagment memory = new MemoryManagment(1024);
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
-        String filePath = "C:\\Users\\HP\\Documents\\job.txt.txt";
-        boolean[] executedAlgorithms = new boolean[3]; // Track executed algorithms: FCFS, SJF, RR
+        String filePath = "job.txt";
 
-        // Corrected: Provide all required arguments to FileReaderThread
-        FileReaderThread fileReader = new FileReaderThread(jobQueueFCFS, jobQueueSJF, jobQueueRR, filePath);
-        fileReader.start(); // Start the thread to populate all queues
+        // Create a flag to signal when the sjfQueue is ready
+        Flag sjfFlag = new Flag(false);
+        Flag memoryFlag = new Flag(false);
 
-        try {
-            // Wait for the FileReaderThread to finish
-            fileReader.join();
-        } catch (InterruptedException e) {
-            // Handle any interruption during the join
-            e.printStackTrace();
-        }
-        // Proceed with further logic after fileReader completes
-        System.out.println("FileReaderThread has completed. Proceeding with the next steps.");
+            FileReaderThread fileReader = new FileReaderThread(jobQueue, filePath);
+            fileReader.start();
 
-        boolean continueProgram = true;
-        while (continueProgram) {
-            readyQueue.clear(); // Clear the readyQueue after each algorithm
-            memory = new MemoryManagment(1024); // Reset memory for each algorithm
+            try {
+                fileReader.join();  // Wait for jobQueue to be populated before proceeding
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
 
             System.out.println("Choose Scheduling Algorithm:");
-            if (!executedAlgorithms[0]) System.out.println("1. FCFS");
-            if (!executedAlgorithms[1]) System.out.println("2. SJF");
-            if (!executedAlgorithms[2]) System.out.println("3. RR");
+            System.out.println("1. FCFS");
+            System.out.println("2. SJF");
+            System.out.println("3. RR");
             System.out.println("4. Exit");
-
             int choice = scanner.nextInt();
 
             if (choice == 4) {
-                continueProgram = false;
                 System.out.println("Exiting the program. Goodbye!");
-                break;
-            }
-
-            if (choice < 1 || choice > 3 || executedAlgorithms[choice - 1]) {
-                System.out.println("Invalid choice or algorithm already executed. Try again.");
-                continue;
+                scanner.close();
+                return;
             }
 
             int quantum = 0;
@@ -57,43 +40,30 @@ public class Main {
                 System.out.print("Enter Quantum for RR: ");
                 quantum = scanner.nextInt();
             }
-
-            // Select the appropriate job queue
-            Queue<PCB> selectedJobQueue = switch (choice) {
-                case 1 -> jobQueueFCFS;
-                case 2 -> jobQueueSJF;
-                case 3 -> jobQueueRR;
-                default -> null;
-            };
-
-            // Load jobs into readyQueue and execute
-            ReadyFlag isReady = new ReadyFlag(); // Flag to signal readiness
-            LoadToReadyQueue loader = new LoadToReadyQueue(selectedJobQueue, readyQueue, memory, choice, quantum, isReady);
+            Flag turn = new Flag(false);
+            // Load jobs into the readyQueue based on scheduling choice
+            LoadToReadyQueue loader = new LoadToReadyQueue(jobQueue, readyQueue, memory, choice, quantum, sjfFlag,memoryFlag , turn);
             loader.start();
 
-            // Wait for ready queue to be populated
-            synchronized (readyQueue) {
-                while (!isReady.isReady) {
-                    try {
-                        readyQueue.wait(); // Wait for loader to signal readiness
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                        System.out.println("Main thread interrupted.");
-                    }
-                }
-            }
+            // Create the scheduler and pass the Flag to synchronize with sjfQueue
+            ExecuteReadyQueue scheduler = new ExecuteReadyQueue(jobQueue, readyQueue, quantum, memory , turn);
 
-            // Execute the selected algorithm
-            ExecuteReadyQueue scheduler = new ExecuteReadyQueue(selectedJobQueue, readyQueue, quantum, memory);
             switch (choice) {
-                case 1 -> scheduler.fcfsSchedule();
-                case 2 -> scheduler.sjfSchedule();
-                case 3 -> scheduler.rrSchedule();
+                case 1:
+                    scheduler.fcfsSchedule();
+                    break;
+                case 2:
+                    scheduler.sjfSchedule();  // Execute SJF Scheduling
+                    break;
+                case 3:
+                    scheduler.rrSchedule();
+                    break;
+                default:
+                    System.out.println("Invalid choice. Please try again.");
             }
 
-            executedAlgorithms[choice - 1] = true; // Mark the algorithm as executed
             System.out.println("\nScheduling completed. Returning to main menu...\n");
-        }
+        
 
         scanner.close();
     }
