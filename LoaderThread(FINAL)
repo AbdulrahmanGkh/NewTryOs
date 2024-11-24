@@ -49,16 +49,16 @@ public class LoaderThread extends Thread {
                     readyQueue.add(job);
                     memory.allocateMemory(job.memoryRequired);
                     job.changeState("READY");
-                    System.out.println("Job " + job.id + " loaded for Round Robin. Remaining Memory: " + memory.getAvailableMemory() + " MB.");
+                 //   System.out.println("Job " + job.id + " loaded for Round Robin. Remaining Memory: " + memory.getAvailableMemory() + " MB.");
                     turn.setTurnToTrue();
                 } else {
                     try {
-                        System.out.println("Not enough memory for Job " + job.id + ". Waiting...");
+                       // System.out.println("Not enough memory for Job " + job.id + ". Waiting...");
                         turn.setTurnToTrue();
                         readyQueue.wait();
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
-                        System.out.println("Loader interrupted while waiting for memory.");
+                      //  System.out.println("Loader interrupted while waiting for memory.");
                         return;
                     }
                 }
@@ -67,7 +67,7 @@ public class LoaderThread extends Thread {
                     Thread.sleep(100);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
-                    System.out.println("Loader interrupted during delay.");
+                  //  System.out.println("Loader interrupted during delay.");
                     return;
                 }
             }
@@ -81,7 +81,7 @@ public class LoaderThread extends Thread {
     private void loadSJF() {
     	 synchronized (readyQueue) {
              while (!priorityQueue.isEmpty()) {
-            	 System.out.println("Loader new iteration...");
+            	// System.out.println("Loader new iteration...");
              	
              	memory.setSwitchToFalse();
                  PCB job = priorityQueue.peek();
@@ -91,16 +91,16 @@ public class LoaderThread extends Thread {
                      readyQueue.add(job);
                      memory.allocateMemory(job.memoryRequired);
                      job.changeState("READY");
-                     System.out.println("Job " + job.id + " loaded for SJF. Remaining Memory: " + memory.getAvailableMemory() + " MB.");
+                  //   System.out.println("Job " + job.id + " loaded for SJF. Remaining Memory: " + memory.getAvailableMemory() + " MB.");
                      turn.setTurnToTrue();
                  } else {
                      try {
-                         System.out.println("Not enough memory for Job " + job.id + ". Waiting...");
+                        // System.out.println("Not enough memory for Job " + job.id + ". Waiting...");
                          turn.setTurnToTrue();
                          readyQueue.wait();
                      } catch (InterruptedException e) {
                          Thread.currentThread().interrupt();
-                         System.out.println("Loader interrupted while waiting for memory.");
+                        // System.out.println("Loader interrupted while waiting for memory.");
                          return;
                      }
                  }
@@ -109,7 +109,7 @@ public class LoaderThread extends Thread {
                      Thread.sleep(100);
                  } catch (InterruptedException e) {
                      Thread.currentThread().interrupt();
-                     System.out.println("Loader interrupted during delay.");
+                   //  System.out.println("Loader interrupted during delay.");
                      return;
                  }
              }
@@ -120,7 +120,7 @@ public class LoaderThread extends Thread {
 
 
     private void loadRR() {
-        System.out.println("Loading jobs using Round Robin with Quantum..");
+      //  System.out.println("Loading jobs using Round Robin with Quantum..");
         
         synchronized (readyQueue) {
             while (!jobQueue.isEmpty()) {
@@ -133,16 +133,16 @@ public class LoaderThread extends Thread {
                     readyQueue.add(job);
                     memory.allocateMemory(job.memoryRequired);
                     job.changeState("READY");
-                    System.out.println("Job " + job.id + " loaded for Round Robin. Remaining Memory: " + memory.getAvailableMemory() + " MB.");
+                  //  System.out.println("Job " + job.id + " loaded for Round Robin. Remaining Memory: " + memory.getAvailableMemory() + " MB.");
                     turn.setTurnToTrue();
                 } else {
                     try {
-                        System.out.println("Not enough memory for Job " + job.id + ". Waiting...");
+                       // System.out.println("Not enough memory for Job " + job.id + ". Waiting...");
                         turn.setTurnToTrue();
                         readyQueue.wait();
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
-                        System.out.println("Loader interrupted while waiting for memory.");
+                        //System.out.println("Loader interrupted while waiting for memory.");
                         return;
                     }
                 }
@@ -151,7 +151,7 @@ public class LoaderThread extends Thread {
                     Thread.sleep(100);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
-                    System.out.println("Loader interrupted during delay.");
+                //    System.out.println("Loader interrupted during delay.");
                     return;
                 }
             }
