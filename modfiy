@@ -1,3 +1,14 @@
-public int compareTo(PCB other) {
-        return Integer.compare(this.burstTime, other.burstTime); // Compare by burst time
+ private static void printPriorityQueue(PriorityQueue<PCB> queue) {
+        System.out.println("--- Priority Queue Content ---");
+        for (PCB pcb : queue) {
+            System.out.println("Job ID: " + pcb.getId() + ", Burst Time: " + pcb.getBurstTime() + ", Memory Required: " + pcb.getMemoryRequired() + " MB");
+        }
+    }
+
+    // Method to print JobQueue content
+    private static void printJobQueue(Queue<PCB> queue) {
+        System.out.println("--- Job Queue Content ---");
+        for (PCB pcb : queue) {
+            System.out.println("Job ID: " + pcb.getId() + ", Burst Time: " + pcb.getBurstTime() + ", Memory Required: " + pcb.getMemoryRequired() + " MB");
+        }
     }
