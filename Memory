@@ -1,0 +1,73 @@
+
+public class MemoryManagment {
+	
+	private int availableMemory;
+	private boolean MemoryState;
+	private boolean Switch;
+	
+	public MemoryManagment(int MemorySize) {
+		
+		availableMemory = MemorySize;
+		MemoryState = false;
+		Switch = false;
+		
+	}
+	
+	
+	
+	
+
+	public boolean isSwitchOn() {
+		return Switch;
+	}
+
+
+
+
+
+	public void setSwitchToFalse() {
+		Switch = false;
+	}
+	
+	public void setSwitchToTrue() {
+		Switch = true;
+	}
+
+
+
+
+
+	public boolean isMemoryStateFull() {
+		return MemoryState;
+	}
+
+
+
+
+
+	public void setMemoryStateToFull() {
+		MemoryState = true;
+	}
+	
+	public void setMemoryStateToNotFull() {
+		MemoryState = false;
+	}
+
+
+
+
+
+	public void allocateMemory(int size) {
+		 availableMemory -= size;
+	}
+
+	public void releaseMemory(int size) {
+		availableMemory += size;
+	}
+
+	public int getAvailableMemory() {
+		return availableMemory;
+	}
+
+
+}
