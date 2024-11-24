@@ -1,0 +1,21 @@
+public class Flag {
+    private boolean turn;
+
+    public Flag(boolean turn) {
+        this.turn = turn;
+    }
+
+    public boolean isMyTurn() {
+        return turn;
+    }
+
+    public void setTurnToFalse() {
+       turn =false;
+    }
+    
+    public void setTurnToTrue() {
+        turn =true;
+     }
+    
+   
+}
