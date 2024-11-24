@@ -1,0 +1,69 @@
+import java.util.*;
+
+public class Main {
+	
+	// Our Data Structures
+    public static Queue<PCB> jobQueue = new LinkedList<>();
+    public static Queue<PCB> readyQueue = new LinkedList<>();
+    public static PriorityQueue<PCB> priorityQueue = new PriorityQueue<PCB>((pcb1,pcb2) -> Integer.compare(pcb1.getBurstTime(), pcb2.getBurstTime()));
+    public static MemoryManagment memory = new MemoryManagment(1024);
+
+    public static void main(String[] args) {
+    	
+        Scanner scanner = new Scanner(System.in);
+        String filePath = "job.txt";
+        //Flag "turn" represent the turn of which thread.
+        Flag turn = new Flag(false);
+
+        
+            FileReaderThread fileReader = new FileReaderThread(jobQueue,priorityQueue, filePath);
+            fileReader.start();
+
+            try {
+                fileReader.join();  // Ensure we safely read all file contents before processing.
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            
+            //Menu
+            System.out.println("Choose Scheduling Algorithm:");
+            System.out.println("1. FCFS");
+            System.out.println("2. SJF");
+            System.out.println("3. RR");
+            System.out.println("4. Exit");
+            int choice = scanner.nextInt();
+
+            if (choice == 4) {
+                System.out.println("Exiting the program. Goodbye!");
+                scanner.close();
+                return;
+            }
+
+            
+            // Call Loader Thread jobQueue ----> ReadyQueue
+            LoadToReadyQueue loader = new LoadToReadyQueue(jobQueue,priorityQueue, readyQueue, memory, choice,turn);
+            loader.start();
+
+            // This is the main thread real work. 
+            ExecuteReadyQueue scheduler = new ExecuteReadyQueue(jobQueue,priorityQueue, readyQueue, memory , turn);
+
+            switch (choice) {
+                case 1:
+                    scheduler.fcfsSchedule(); // First-Come-First-Serve Scheduling processes Algorithm
+                    break;
+                case 2:
+                    scheduler.sjfSchedule();  // Shortest-Job-First Scheduling processes Algorithm
+                    break;
+                case 3:
+                    scheduler.rrSchedule();   // Round-Robin Scheduling processes Algorithm
+                    break;
+                default:
+                    System.out.println("Invalid choice. Please try again.");
+            }
+
+            System.out.println("\nScheduling completed. Returning to main menu...\n");
+        
+
+        scanner.close();
+    }
+}
