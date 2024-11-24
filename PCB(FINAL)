@@ -1,11 +1,13 @@
 public class PCB implements Comparable<PCB> {
-    int id;
-    int burstTime;
-    int remainingTime;
-    int memoryRequired;
-    int waitingTime;
-    int turnaroundTime;
-    String state;
+	
+	private int id;
+    private int burstTime;
+    private int remainingTime;
+    private int memoryRequired;
+    private int waitingTime;
+    private int turnaroundTime;
+    private int submissionTime;
+    private String state;
 
     public PCB(int id, int burstTime, int memoryRequired) {
         this.id = id;
@@ -47,6 +49,15 @@ public class PCB implements Comparable<PCB> {
         this.turnaroundTime = turnaroundTime;
     }
 
+	public int getId() {
+		return id;
+	}
+
+
+	public int getMemoryRequired() {
+		return memoryRequired;
+	}
+
 
 	@Override // Method to help us applying SJF Scheduling
 	public int compareTo(PCB other) {
@@ -57,6 +68,16 @@ public class PCB implements Comparable<PCB> {
 
 	public int getBurstTime() {
 		return burstTime;
+	}
+
+
+	public int getSubmissionTime() {
+		return submissionTime;
+	}
+
+
+	public void setSubmissionTime(int submissionTime) {
+		this.submissionTime = submissionTime;
 	}
 	
 	
