@@ -70,17 +70,18 @@ public class CPUScheduler {
     public void sjfSchedule() {
 
     	int currentTime = 0;
-        int totalWaitingTime = 0;
-        int totalTurnaroundTime = 0;
+        int totalWaitingTime = 0 , totalTurnaroundTime = 0;
+        int startTime = 0 , endTime = 0 ;
+        int waitingTime = 0 , turnaroundTime = 0;
         int processCounter = 0;
-        int endTime = 0 , startTime = 0;
+        
         while(!priorityQueue.isEmpty() || !readyQueue.isEmpty()) {
             synchronized (readyQueue) {
     	        while (turn.isMyTurn() && !readyQueue.isEmpty()) {
     	            PCB process = readyQueue.poll();
     	            process.changeState("RUNNING");
 
-                startTime = currentTime; 
+               
                
                 try {
                     Thread.sleep(process.burstTime);
@@ -88,20 +89,24 @@ public class CPUScheduler {
                     System.out.println("Process " + process.id + " execution interrupted.");
                 }
 
-                int usedMemory = process.memoryRequired;
-                endTime = startTime + process.burstTime;
-                totalWaitingTime += 0 + startTime; // ArrivalTime + startTime
-                totalTurnaroundTime += endTime - 0; // EndTime - ArrivalTime
                 
-                process.setWaitingTime(0 + startTime);
-                process.setTurnaroundTime(endTime - 0);
+                startTime = currentTime; 
+                endTime = startTime + process.burstTime;
+                
+                process.setWaitingTime(0 + startTime); // From Submission: ArrivalTime + startTime
+                process.setTurnaroundTime(endTime - 0);  // EndTime - ArrivalTime
+                
+                totalWaitingTime += process.getWaitingTime();
+                totalTurnaroundTime += process.getTurnaroundTime();
+                
                 process.changeState("TERMINATED");
                 memory.releaseMemory(process.memoryRequired);
                 processCounter++;
 
                 System.out.println("Process " + process.id + " executed. Start Time: " + startTime + 
-                        ", End Time: " + endTime + ", Used Memory: " + usedMemory + 
-                        " MB, Available Memory: " + memory.getAvailableMemory() + " MB");
+                        "Waiting Time: " + process.getWaitingTime() + "Turnaround Time: "
+                		+ process.getTurnaroundTime() + ", End Time: " + endTime + 
+                        " , Available Memory: " + memory.getAvailableMemory() + " MB");
                
               
                 currentTime += process.burstTime;
@@ -134,10 +139,13 @@ public class CPUScheduler {
 	            process.changeState("RUNNING");
 	            
 	            int startTime = currentTime; 
+	            System.out.println("Process " + process.id + " is selected at time: " + startTime + "." );
 	            int executedTime = Math.min(process.remainingTime, 8); 
 	            currentTime += executedTime; 
 	            process.remainingTime -= executedTime; 
+	            
 	            int waitingTime = startTime - 0;
+	            process.setWaitingTime(process.getWaitingTime() + waitingTime);
 	            totalWaitingTime += waitingTime;
 	            
 	            try {
@@ -153,15 +161,16 @@ public class CPUScheduler {
 	                readyQueue.add(process);
 	            } else {
 	            	
-	            	 int turnaroundTime = currentTime - 0;
-	                 totalTurnaroundTime += turnaroundTime;
-	              
+	            	process.setTurnaroundTime(currentTime);
+	            	totalTurnaroundTime += process.getTurnaroundTime();
+	            	
 	                process.changeState("TERMINATED");
 	                memory.releaseMemory(process.memoryRequired); 
 	                processCounter++;
 	                endtime = currentTime;
 	                System.out.println("Process " + process.id + " executed. Start Time: " + startTime + 
-	                        ", End Time: " + endtime + ", Used Memory: " + (1024-memory.getAvailableMemory()) + 
+	                        ", End Time: " + endtime + " Process Waiting Time: " + process.getWaitingTime() +
+	                        " Process Turnaround Time : "+ process.getTurnaroundTime() +
 	                        " MB, Available Memory: " + memory.getAvailableMemory() + " MB");
 	                readyQueue.notifyAll();
 	            }
