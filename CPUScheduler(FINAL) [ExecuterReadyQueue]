@@ -5,10 +5,10 @@ public class CPUScheduler {
     private Queue<PCB> jobQueue;
     private Queue<PCB> readyQueue;
     private PriorityQueue<PCB> priorityQueue;
-    private MemoryManagment memory;
+    private MemoryManagement memory;
     private Flag turn;
 
-    public CPUScheduler(Queue<PCB> jobQueue,PriorityQueue<PCB> priorityQueue, Queue<PCB> readyQueue,MemoryManagment memory ,Flag turn) {
+    public CPUScheduler(Queue<PCB> jobQueue,PriorityQueue<PCB> priorityQueue, Queue<PCB> readyQueue,MemoryManagement memory ,Flag turn) {
     	
         this.jobQueue = jobQueue;
         this.priorityQueue = priorityQueue;
@@ -31,14 +31,14 @@ public class CPUScheduler {
 
                 startTime = currentTime;
                 try {
-                    Thread.sleep(process.burstTime);
+                    Thread.sleep(process.getBurstTime());
                 } catch (InterruptedException e) {
-                    System.out.println("Process " + process.id + " execution interrupted.");
+                    System.out.println("Process " + process.getId() + " execution interrupted.");
                 }
 
                
-                int usedMemory = process.memoryRequired;
-                endTime = startTime + process.burstTime;
+                int usedMemory = process.getMemoryRequired();
+                endTime = startTime + process.getBurstTime();
                 totalWaitingTime += 0 + startTime; 
                 totalTurnaroundTime += endTime - 0; 
                 
@@ -46,15 +46,15 @@ public class CPUScheduler {
                 process.setWaitingTime(0 + startTime);
                 process.setTurnaroundTime(endTime - 0);
                 process.changeState("TERMINATED");
-                memory.releaseMemory(process.memoryRequired);
+                memory.releaseMemory(process.getMemoryRequired());
                 processCounter++;
 
-                System.out.println("Process " + process.id + " executed. Start Time: " + startTime + 
+                System.out.println("Process " + process.getId() + " executed. Start Time: " + startTime + 
                         ", End Time: " + endTime + ", Used Memory: " + usedMemory + 
                         " MB, Available Memory: " + memory.getAvailableMemory() + " MB");
                
               
-                currentTime += process.burstTime;
+                currentTime += process.getBurstTime();
                 readyQueue.notifyAll();
             }
         }
@@ -72,7 +72,7 @@ public class CPUScheduler {
     	int currentTime = 0;
         int totalWaitingTime = 0 , totalTurnaroundTime = 0;
         int startTime = 0 , endTime = 0 ;
-        int waitingTime = 0 , turnaroundTime = 0;
+        
         int processCounter = 0;
         
         while(!priorityQueue.isEmpty() || !readyQueue.isEmpty()) {
@@ -84,14 +84,14 @@ public class CPUScheduler {
                
                
                 try {
-                    Thread.sleep(process.burstTime);
+                    Thread.sleep(process.getBurstTime());
                 } catch (InterruptedException e) {
-                    System.out.println("Process " + process.id + " execution interrupted.");
+                    System.out.println("Process " + process.getId() + " execution interrupted.");
                 }
 
                 
                 startTime = currentTime; 
-                endTime = startTime + process.burstTime;
+                endTime = startTime + process.getBurstTime();
                 
                 process.setWaitingTime(0 + startTime); // From Submission: ArrivalTime + startTime
                 process.setTurnaroundTime(endTime - 0);  // EndTime - ArrivalTime
@@ -100,16 +100,16 @@ public class CPUScheduler {
                 totalTurnaroundTime += process.getTurnaroundTime();
                 
                 process.changeState("TERMINATED");
-                memory.releaseMemory(process.memoryRequired);
+                memory.releaseMemory(process.getMemoryRequired());
                 processCounter++;
 
-                System.out.println("Process " + process.id + " executed. Start Time: " + startTime + 
+                System.out.println("Process " + process.getId() + " executed. Start Time: " + startTime + 
                         "Waiting Time: " + process.getWaitingTime() + "Turnaround Time: "
                 		+ process.getTurnaroundTime() + ", End Time: " + endTime + 
                         " , Available Memory: " + memory.getAvailableMemory() + " MB");
                
               
-                currentTime += process.burstTime;
+                currentTime += process.getBurstTime();
                 readyQueue.notifyAll();
             }
         }
@@ -130,7 +130,7 @@ public class CPUScheduler {
     	  int processCounter = 0;
     	  int totalWaitingTime = 0;       // helper for calculating AVG
     	  int totalTurnaroundTime = 0;    // helper for calculating AVG
-    	  int endtime = 0;
+    	  int startTime = 0 , endtime = 0;
     	    
         while(!jobQueue.isEmpty() || !readyQueue.isEmpty()) {
         synchronized (readyQueue) {
@@ -138,11 +138,14 @@ public class CPUScheduler {
 	            PCB process = readyQueue.poll(); 
 	            process.changeState("RUNNING");
 	            
-	            int startTime = currentTime; 
-	            System.out.println("Process " + process.id + " is selected at time: " + startTime + "." );
-	            int executedTime = Math.min(process.remainingTime, 8); 
+	            if(process.getRemainingTime() == process.getBurstTime()) 
+	            	process.setSubmissionTime(currentTime);
+	            
+	            startTime = currentTime; 
+	            System.out.println("Process " + process.getId() + " is selected at time: " + startTime + "." );
+	            int executedTime = Math.min(process.getRemainingTime(), 8); 
 	            currentTime += executedTime; 
-	            process.remainingTime -= executedTime; 
+	            process.setRemainingTime(process.getRemainingTime() - executedTime); 
 	            
 	            int waitingTime = startTime - 0;
 	            process.setWaitingTime(process.getWaitingTime() + waitingTime);
@@ -151,12 +154,12 @@ public class CPUScheduler {
 	            try {
 	                Thread.sleep(executedTime);
 	            } catch (InterruptedException e) {
-	                System.out.println("Process " + process.id + " execution interrupted.");
+	                System.out.println("Process " + process.getId() + " execution interrupted.");
 	            }
-	
-	            if (process.remainingTime > 0) {
-	            	 System.out.println("Process Executed partially: " + process.id + ", total burst time: " + process.burstTime + 
-	            			 "ms, Remaining time: " + process.remainingTime
+	            
+	            if (process.getRemainingTime() > 0) {
+	            	 System.out.println("Process Executed partially: " + process.getId() + ", total burst time: " + process.getBurstTime() + 
+	            			 "ms, Remaining time: " + process.getRemainingTime()
 		                        +" ms, Available Memory: " + memory.getAvailableMemory() + " MB");
 	                readyQueue.add(process);
 	            } else {
@@ -165,10 +168,10 @@ public class CPUScheduler {
 	            	totalTurnaroundTime += process.getTurnaroundTime();
 	            	
 	                process.changeState("TERMINATED");
-	                memory.releaseMemory(process.memoryRequired); 
+	                memory.releaseMemory(process.getMemoryRequired()); 
 	                processCounter++;
 	                endtime = currentTime;
-	                System.out.println("Process " + process.id + " executed. Start Time: " + startTime + 
+	                System.out.println("Process " + process.getId() + " executed. Start Time: " + startTime + 
 	                        ", End Time: " + endtime + " Process Waiting Time: " + process.getWaitingTime() +
 	                        " Process Turnaround Time : "+ process.getTurnaroundTime() +
 	                        " MB, Available Memory: " + memory.getAvailableMemory() + " MB");
