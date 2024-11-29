@@ -22,176 +22,198 @@ public class CPUScheduler {
         int totalWaitingTime = 0;
         int totalTurnaroundTime = 0;
         int processCounter = 0;
-        int endTime = 0 , startTime = 0;
-        while(!jobQueue.isEmpty() || !readyQueue.isEmpty()) {
+        int endTime = 0, startTime = 0;
+
+        // Print table header with borders
+        System.out.println("-------------------------------------------------------------");
+        System.out.printf("| %-8s | %-12s | %-12s | %-12s | %-15s |\n", 
+                "Job ID", "Start Time", "End Time", "Waiting Time", "Turnaround Time");
+        System.out.println("-------------------------------------------------------------");
+
+        while (!jobQueue.isEmpty() || !readyQueue.isEmpty()) {
             synchronized (readyQueue) {
-    	        while (turn.isMyTurn() && !readyQueue.isEmpty()) {
-    	            PCB process = readyQueue.poll(); 
-    	            process.changeState("RUNNING");
+                while (turn.isMyTurn() && !readyQueue.isEmpty()) {
+                    PCB process = readyQueue.poll();
+                    process.changeState("RUNNING");
 
-                startTime = currentTime;
-                try {
-                    Thread.sleep(process.getBurstTime());
-                } catch (InterruptedException e) {
-                    System.out.println("Process " + process.getId() + " execution interrupted.");
+                    startTime = currentTime;
+                    try {
+                        Thread.sleep(process.getBurstTime());
+                    } catch (InterruptedException e) {
+                    }
+
+                    endTime = startTime + process.getBurstTime();
+                    int waitingTime = startTime;
+                    int turnaroundTime = endTime;
+
+                    totalWaitingTime += waitingTime;
+                    totalTurnaroundTime += turnaroundTime;
+
+                    process.setWaitingTime(waitingTime);
+                    process.setTurnaroundTime(turnaroundTime);
+                    process.changeState("TERMINATED");
+                    memory.releaseMemory(process.getMemoryRequired());
+                    processCounter++;
+
+                    // Print process details in a formatted table row
+                    System.out.printf("| %-8d | %-12d | %-12d | %-12d | %-15d |\n", 
+                            process.getId(), startTime, endTime, waitingTime, turnaroundTime);
+
+                    currentTime += process.getBurstTime();
+                    readyQueue.notifyAll();
                 }
-
-               
-                int usedMemory = process.getMemoryRequired();
-                endTime = startTime + process.getBurstTime();
-                totalWaitingTime += 0 + startTime; 
-                totalTurnaroundTime += endTime - 0; 
-                
-                
-                process.setWaitingTime(0 + startTime);
-                process.setTurnaroundTime(endTime - 0);
-                process.changeState("TERMINATED");
-                memory.releaseMemory(process.getMemoryRequired());
-                processCounter++;
-
-                System.out.println("Process " + process.getId() + " executed. Start Time: " + startTime + 
-                        ", End Time: " + endTime + ", Used Memory: " + usedMemory + 
-                        " MB, Available Memory: " + memory.getAvailableMemory() + " MB");
-               
-              
-                currentTime += process.getBurstTime();
-                readyQueue.notifyAll();
             }
         }
-    }
-     
+
+        // Print averages row with borders
+        System.out.println("-------------------------------------------------------------");
+        System.out.printf("| %-8s | %-12s | %-12s | %-12.2f | %-15.2f |\n", 
+                "Averages", "", "", 
+                (double) totalWaitingTime / processCounter, 
+                (double) totalTurnaroundTime / processCounter);
+        System.out.println("-------------------------------------------------------------");
+
         System.out.println("FCFS Scheduling completed.");
-        System.out.println("Total processes executed: " + processCounter);
-        System.out.printf("Average Waiting Time: %.2f ms, Average Turnaround Time: %.2f ms\n",
-                (double) totalWaitingTime / processCounter, (double) totalTurnaroundTime / processCounter);
     }
+
     
 
     public void sjfSchedule() {
-
-    	int currentTime = 0;
-        int totalWaitingTime = 0 , totalTurnaroundTime = 0;
-        int startTime = 0 , endTime = 0 ;
-        
+        int currentTime = 0;
+        int totalWaitingTime = 0, totalTurnaroundTime = 0;
+        int startTime = 0, endTime = 0;
         int processCounter = 0;
-        
-        while(!priorityQueue.isEmpty() || !readyQueue.isEmpty()) {
+
+        // Print table header with borders
+        System.out.println("-------------------------------------------------------------");
+        System.out.printf("| %-8s | %-12s | %-12s | %-12s | %-15s |\n", 
+                "Job ID", "Start Time", "End Time", "Waiting Time", "Turnaround Time");
+        System.out.println("-------------------------------------------------------------");
+
+        while (!priorityQueue.isEmpty() || !readyQueue.isEmpty()) {
             synchronized (readyQueue) {
-    	        while (turn.isMyTurn() && !readyQueue.isEmpty()) {
-    	            PCB process = readyQueue.poll();
-    	            process.changeState("RUNNING");
+                while (turn.isMyTurn() && !readyQueue.isEmpty()) {
+                    PCB process = readyQueue.poll();
+                    process.changeState("RUNNING");
 
-               
-               
-                try {
-                    Thread.sleep(process.getBurstTime());
-                } catch (InterruptedException e) {
-                    System.out.println("Process " + process.getId() + " execution interrupted.");
+                    try {
+                        Thread.sleep(process.getBurstTime());
+                    } catch (InterruptedException e) {
+                    }
+
+                    startTime = currentTime;
+                    endTime = startTime + process.getBurstTime();
+                    int waitingTime = startTime;
+                    int turnaroundTime = endTime;
+
+                    process.setWaitingTime(waitingTime);
+                    process.setTurnaroundTime(turnaroundTime);
+
+                    totalWaitingTime += waitingTime;
+                    totalTurnaroundTime += turnaroundTime;
+
+                    process.changeState("TERMINATED");
+                    memory.releaseMemory(process.getMemoryRequired());
+                    processCounter++;
+
+                    // Print process details in a formatted table row
+                    System.out.printf("| %-8d | %-12d | %-12d | %-12d | %-15d |\n", 
+                            process.getId(), startTime, endTime, waitingTime, turnaroundTime);
+
+                    currentTime += process.getBurstTime();
+                    readyQueue.notifyAll();
                 }
-
-                
-                startTime = currentTime; 
-                endTime = startTime + process.getBurstTime();
-                
-                process.setWaitingTime(0 + startTime); // From Submission: ArrivalTime + startTime
-                process.setTurnaroundTime(endTime - 0);  // EndTime - ArrivalTime
-                
-                totalWaitingTime += process.getWaitingTime();
-                totalTurnaroundTime += process.getTurnaroundTime();
-                
-                process.changeState("TERMINATED");
-                memory.releaseMemory(process.getMemoryRequired());
-                processCounter++;
-
-                System.out.println("Process " + process.getId() + " executed. Start Time: " + startTime + 
-                        "Waiting Time: " + process.getWaitingTime() + "Turnaround Time: "
-                		+ process.getTurnaroundTime() + ", End Time: " + endTime + 
-                        " , Available Memory: " + memory.getAvailableMemory() + " MB");
-               
-              
-                currentTime += process.getBurstTime();
-                readyQueue.notifyAll();
             }
         }
-    }
-    
+
+        // Print averages row with borders
+        if (processCounter > 0) {
+            System.out.println("-------------------------------------------------------------");
+            System.out.printf("| %-8s | %-12s | %-12s | %-12.2f | %-15.2f |\n", 
+                    "Averages", "", "", 
+                    (double) totalWaitingTime / processCounter, 
+                    (double) totalTurnaroundTime / processCounter);
+            System.out.println("-------------------------------------------------------------");
+        }
+
         System.out.println("SJF Scheduling completed.");
         System.out.println("Total processes executed: " + processCounter);
         System.out.printf("Average Waiting Time: %.2f ms, Average Turnaround Time: %.2f ms\n",
                 (double) totalWaitingTime / processCounter, (double) totalTurnaroundTime / processCounter);
-       
     }
 
 
     
     public void rrSchedule() {
-    	
-    	  int currentTime = 0;
-    	  int processCounter = 0;
-    	  int totalWaitingTime = 0;       // helper for calculating AVG
-    	  int totalTurnaroundTime = 0;    // helper for calculating AVG
-    	  int startTime = 0 , endtime = 0;
-    	    
-        while(!jobQueue.isEmpty() || !readyQueue.isEmpty()) {
-        synchronized (readyQueue) {
-	        while (turn.isMyTurn() && !readyQueue.isEmpty()) {
-	            PCB process = readyQueue.poll(); 
-	            process.changeState("RUNNING");
-	            
-	            if(process.getRemainingTime() == process.getBurstTime()) 
-	            	process.setSubmissionTime(currentTime);
-	            
-	            startTime = currentTime; 
-	            System.out.println("Process " + process.getId() + " is selected at time: " + startTime + "." );
-	            int executedTime = Math.min(process.getRemainingTime(), 8); 
-	            currentTime += executedTime; 
-	            process.setRemainingTime(process.getRemainingTime() - executedTime); 
-	            
-	            int waitingTime = startTime - 0;
-	            process.setWaitingTime(process.getWaitingTime() + waitingTime);
-	            totalWaitingTime += waitingTime;
-	            
-	            try {
-	                Thread.sleep(executedTime);
-	            } catch (InterruptedException e) {
-	                System.out.println("Process " + process.getId() + " execution interrupted.");
-	            }
-	            
-	            if (process.getRemainingTime() > 0) {
-	            	 System.out.println("Process Executed partially: " + process.getId() + ", total burst time: " + process.getBurstTime() + 
-	            			 "ms, Remaining time: " + process.getRemainingTime()
-		                        +" ms, Available Memory: " + memory.getAvailableMemory() + " MB");
-	                readyQueue.add(process);
-	            } else {
-	            	
-	            	process.setTurnaroundTime(currentTime);
-	            	totalTurnaroundTime += process.getTurnaroundTime();
-	            	
-	                process.changeState("TERMINATED");
-	                memory.releaseMemory(process.getMemoryRequired()); 
-	                processCounter++;
-	                endtime = currentTime;
-	                System.out.println("Process " + process.getId() + " executed. Start Time: " + startTime + 
-	                        ", End Time: " + endtime + " Process Waiting Time: " + process.getWaitingTime() +
-	                        " Process Turnaround Time : "+ process.getTurnaroundTime() +
-	                        " MB, Available Memory: " + memory.getAvailableMemory() + " MB");
-	                readyQueue.notifyAll();
-	            }
-	        }
+        int currentTime = 0;
+        int processCounter = 0;
+        int totalWaitingTime = 0;
+        int totalTurnaroundTime = 0;
+        int endTime = 0;
+
+        // Print table header with borders
+        System.out.println("-------------------------------------------------------------");
+        System.out.printf("| %-8s | %-12s | %-12s | %-12s | %-15s |\n", 
+                "Job ID", "Start Time", "End Time", "Waiting Time", "Turnaround Time");
+        System.out.println("-------------------------------------------------------------");
+
+        while (!jobQueue.isEmpty() || !readyQueue.isEmpty()) {
+            synchronized (readyQueue) {
+                while (turn.isMyTurn() && !readyQueue.isEmpty()) {
+                    PCB process = readyQueue.poll();
+                    process.changeState("RUNNING");
+                    if (process.getRemainingTime() == process.getBurstTime()) {
+                        process.setSubmissionTime(currentTime);
+                    }
+
+                    int startTime = currentTime;
+                    int executedTime = Math.min(process.getRemainingTime(), 8);
+                    currentTime += executedTime;
+                    process.setRemainingTime(process.getRemainingTime() - executedTime);
+
+                    int waitingTime = startTime - 0; 
+                    process.setWaitingTime(process.getWaitingTime() + waitingTime);
+                    totalWaitingTime += waitingTime;
+
+                    try {
+                        Thread.sleep(executedTime);
+                    } catch (InterruptedException e) {
+                    }
+
+                    if (process.getRemainingTime() > 0) {
+                        readyQueue.add(process);
+                    } else {
+                        process.setTurnaroundTime(currentTime);
+                        totalTurnaroundTime += process.getTurnaroundTime();
+
+                        process.changeState("TERMINATED");
+                        memory.releaseMemory(process.getMemoryRequired());
+                        processCounter++;
+                        endTime = currentTime;
+
+                        // Print process details in a formatted table row
+                        System.out.printf("| %-8d | %-12d | %-12d | %-12d | %-15d |\n", 
+                                process.getId(), process.getSubmissionTime(), endTime, process.getWaitingTime(), process.getTurnaroundTime());
+                    }
+                    readyQueue.notifyAll();
+                }
+            }
         }
-    } 
-        
-        
-        if (processCounter > 0) { //Avoiding Division by zero
-            double averageWaitingTime = (double) totalWaitingTime / processCounter;
-            double averageTurnaroundTime = (double) totalTurnaroundTime / processCounter;
-            System.out.println("RR Scheduling completed.");
-            System.out.println("Total processes executed: " + processCounter);
-            System.out.printf("Average Waiting Time: %.2f ms\n", averageWaitingTime);
-            System.out.printf("Average Turnaround Time: %.2f ms\n", averageTurnaroundTime);
+
+        // Print averages row with borders
+        if (processCounter > 0) {
+            System.out.println("-------------------------------------------------------------");
+            System.out.printf("| %-8s | %-12s | %-12s | %-12.2f | %-15.2f |\n", 
+                    "Averages", "", "", 
+                    (double) totalWaitingTime / processCounter, 
+                    (double) totalTurnaroundTime / processCounter);
+            System.out.println("-------------------------------------------------------------");
         } else {
             System.out.println("No processes executed.");
         }
+
+        System.out.println("RR Scheduling completed.");
     }
+
 
 }
